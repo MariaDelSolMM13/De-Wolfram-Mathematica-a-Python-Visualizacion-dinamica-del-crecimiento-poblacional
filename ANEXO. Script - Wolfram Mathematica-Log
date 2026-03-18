@@ -1,0 +1,220 @@
+# ANEXO 2.
+# SCRIPT EN Wolfram Mathematica
+#
+# ARTÍCULO "De Wolfram Mathematica a Python: Visualización # dinámica del crecimiento poblacional como estrategia de aprendizaje."
+#
+# AUTOR SCRIPT: Muñoz-Mortera María del Sol
+# email: ms.munozmortera@gmail.com
+#---------------------------------------
+#
+(* --- PROYECTO FINAL: DINÁMICA DE POBLACIONES --- *)
+(* Alumna: María del Sol Muñoz Mortera *)
+(* Fecha: 8 de diciembre 2025 *)
+
+(* --- BLOQUE 0: DEFINICIÓN DE VARIABLES Y FUNCIONES --- *)
+
+(* 1. Definimos la Solución Analítica (Ecuación Integrada) *)
+logisticaN[t_, r_, k_, n0_] := k / (1 + ((k - n0) / n0) * Exp[-r * t]);
+
+(* 2. Definimos la Ecuación de Velocidad (Derivada) *)
+velocidadLog[n_, r_, K_] := r * n * (1 - n / K);
+
+(* 3. Estilo Gráfico Unificado *)
+estiloGrafico = {
+  Frame -> True, 
+  FrameStyle -> Directive[Black, Thickness[0.002]], 
+  LabelStyle -> {FontFamily -> "Arial", 14, Black}, 
+  GridLines -> Automatic, 
+  ImageSize -> Medium
+};
+
+Print["Modelo matemático y estilos cargados exitosamente."];
+
+
+(* --- BLOQUE 1: FAMILIA DE CURVAS (EFECTO DE "r") --- *)
+
+Kval = 100; 
+noval = 5; 
+tiempoMax = 25;
+
+Plot[{
+  logisticaN[t, 0.2, Kval, noval], 
+  logisticaN[t, 0.5, Kval, noval], 
+  logisticaN[t, 1.0, Kval, noval]
+ }, {t, 0, tiempoMax}, 
+ PlotStyle -> {
+  {Blue, Thickness[0.007]}, 
+  {Orange, Thickness[0.007], Dashed}, 
+  {Red, Thickness[0.007]}
+ }, 
+ PlotLegends -> {"r = 0.2 (Lento)", "r = 0.5 (Medio)", "r = 1.0 (Rápido)"}, 
+ PlotLabel -> "Efecto de la tasa de crecimiento, r", 
+ FrameLabel -> {"Tiempo (t)", "Tamaño de Población N(t)"}, 
+ PlotRange -> {{0, tiempoMax}, {0, Kval * 1.2}}, 
+ Epilog -> {
+  Red, Dashed, Thickness[0.005], 
+  Line[{{0, Kval}, {tiempoMax, Kval}}], 
+  Text[Style["Capacidad de Carga K", Red, Background -> White], {tiempoMax / 2, Kval + 5}]
+ }, 
+ Evaluate[estiloGrafico]
+]
+
+
+(* --- BLOQUE 2: RELACIÓN POBLACIÓN vs. VELOCIDAD --- *)
+
+rDemo = 0.8; 
+KDemo = 100;
+
+Plot[velocidadLog[n, rDemo, KDemo], {n, 0, KDemo * 1.1}, 
+ PlotStyle -> {Purple, Thickness[0.008]}, 
+ Filling -> Axis, 
+ FillingStyle -> Opacity[0.2, Purple], 
+ PlotLabel -> "La velocidad cae a cero cuando alcanzamos K", 
+ FrameLabel -> {"Población Actual (N)", "Velocidad de Crecimiento (dN/dt)"}, 
+ Epilog -> {
+  (* Marcador del punto máximo de velocidad *)
+  Green, PointSize[0.02], Point[{KDemo / 2, velocidadLog[KDemo / 2, rDemo, KDemo]}], 
+  Text[Style["Máxima Vel. (K/2)", Darker[Green]], {KDemo / 2, velocidadLog[KDemo / 2, rDemo, KDemo] * 1.1}], 
+  (* Marcador de K *)
+  Red, Dashed, Thickness[0.005], Line[{{KDemo, 0}, {KDemo, 10}}], 
+  Text[Style["Fin del Crecimiento\n (N=K)", Red], {KDemo, 15}]
+ }, 
+ Evaluate[estiloGrafico]
+]
+
+
+(* --- BLOQUE 3: SIMULADOR ECOLÓGICO MULTI-ESPECIE --- *)
+
+estiloTitulo = {FontFamily -> "Arial", FontSize -> 16, Bold, RGBColor[0.2, 0.4, 0.6]};
+estiloTexto = {FontFamily -> "Arial", FontSize -> 12};
+colores = <|"Bacteria" -> RGBColor[0.2, 0.8, 0.2], "Ballena" -> RGBColor[0, 0.4, 0.8], "Humano" -> RGBColor[0.8, 0.4, 0]|>;
+
+TabView[{
+  "1. Bacterias (E. coli)" -> Manipulate[
+    Column[{
+      Style["Cultivo en Placa de Petri", estiloTitulo],
+      Style["Crecimiento rápido en espacio limitado (Horas)", Italic, Gray],
+      Grid[{{
+        Plot[logisticaN[t, rB, KB, n0B], {t, 0, timeB}, 
+          PlotRange -> {{0, timeB}, {0, KB * 1.2}}, 
+          PlotStyle -> {colores["Bacteria"], Thickness[0.007]}, 
+          Frame -> True, FrameLabel -> {"Tiempo (Horas)", "Millones de Bacterias"}, 
+          PlotLabel -> "Curva de Crecimiento", ImageSize -> 300, 
+          Epilog -> {Red, Dashed, Line[{{0, KB}, {timeB, KB}}], Text["K", {1, KB * 1.05}]}],
+        Plot[velocidadLog[n, rB, KB], {n, 0, KB * 1.1}, 
+          PlotStyle -> {Purple, Thickness[0.007]}, 
+          Frame -> True, FrameLabel -> {"Población (N)", "Velocidad (Millones/hora)"}, 
+          PlotLabel -> "Velocidad de Reproducción", ImageSize -> 300, Filling -> Axis, 
+          Epilog -> {Black, PointSize[0.02], Point[{logisticaN[tActualB, rB, KB, n0B], velocidadLog[logisticaN[tActualB, rB, KB, n0B], rB, KB]}]}]
+      }}],
+      Panel[
+        Module[{Nactual, terminoFreno, velActual},
+          Nactual = logisticaN[tActualB, rB, KB, n0B];
+          terminoFreno = (1 - Nactual / KB);
+          velActual = velocidadLog[Nactual, rB, KB];
+          Column[{
+            Style["Análisis Matemático en t = " <> ToString[NumberForm[tActualB, {3, 1}]] <> " horas:", Bold],
+            Text[StringForm["Población Actual (N) = `` millones", NumberForm[Nactual, {5, 0}]]],
+            Text[StringForm["Factor de Freno (1-N/K) = ``", NumberForm[terminoFreno, {3, 2}]]],
+            Text[StringForm["Velocidad dN/dt = r * N * Freno = `` millones/hora", NumberForm[velActual, {5, 0}]]],
+            If[terminoFreno < 0.15, 
+               Style["¡CUIDADO! Nutrientes agotándose, crecimiento casi nulo.", Red, Bold], 
+               Style["Crecimiento activo.", Darker[Green]]]
+          }]
+        ], Background -> LightYellow, ImageSize -> 600, Alignment -> Center]
+    }],
+    Delimiter, Style["Parámetros E. coli", Bold],
+    {{rB, 3.0, "Tasa (r) [1/hora]"}, 1.0, 5.0, Appearance -> "Labeled"},
+    {{KB, 10000, "Capacidad (K) [Millones]"}, 5000, 20000, Appearance -> "Labeled"},
+    {{n0B, 100, "Inoculo Inicial (N0)"}, 10, 500, Appearance -> "Labeled"},
+    Delimiter, {{timeB, 10, "Eje Tiempo"}, 5, 24},
+    {{tActualB, 0, "Simular Tiempo"}, 0, timeB, AnimationRunning -> False}
+  ],
+
+  "2. Ballenas (Estrategia K)" -> Manipulate[
+    Column[{
+      Style["Población de Ballenas en el Océano", estiloTitulo],
+      Style["Recuperación lenta y estabilidad a largo plazo (Años)", Italic, Gray],
+      Grid[{{
+        Plot[logisticaN[t, rW, KW, n0W], {t, 0, timeW}, 
+          PlotRange -> {{0, timeW}, {0, KW * 1.2}}, 
+          PlotStyle -> {colores["Ballena"], Thickness[0.007]}, 
+          Frame -> True, FrameLabel -> {"Tiempo (Años)", "Individuos"}, 
+          PlotLabel -> "Recuperación Poblacional", ImageSize -> 300, 
+          Epilog -> {Red, Dashed, Line[{{0, KW}, {timeW, KW}}]}] ,
+        Plot[velocidadLog[n, rW, KW], {n, 0, KW * 1.1}, 
+          PlotStyle -> {Purple, Thickness[0.007]}, 
+          Frame -> True, FrameLabel -> {"Población (N)", "Nuevas Ballenas/Año"}, 
+          PlotLabel -> "Tasa de Reclutamiento", ImageSize -> 300, Filling -> Axis, 
+          Epilog -> {Black, PointSize[0.02], Point[{logisticaN[tActualW, rW, KW, n0W], velocidadLog[logisticaN[tActualW, rW, KW, n0W], rW, KW]}]}]
+      }}],
+      Panel[
+        Module[{Nactual, terminoFreno, velActual},
+          Nactual = logisticaN[tActualW, rW, KW, n0W];
+          terminoFreno = (1 - Nactual / KW);
+          velActual = velocidadLog[Nactual, rW, KW];
+          Column[{
+            Style["Análisis en el año " <> ToString[NumberForm[tActualW, {4, 0}]], Bold],
+            Text[StringForm["Población Actual (N) = `` ballenas", NumberForm[Nactual, {5, 0}]]],
+            Text[StringForm["Espacio disponible (1-N/K) = ``", NumberForm[terminoFreno, {3, 2}]]],
+            Text[StringForm["Crecimiento anual = `` ballenas/año", NumberForm[velActual, {4, 1}]]],
+            If[Nactual < KW * 0.2, 
+               Style["Población en peligro (muy baja).", Red], 
+               Style["Población estable o recuperándose.", Blue]]
+          }]
+        ], Background -> LightBlue, ImageSize -> 600, Alignment -> Center]
+    }],
+    Delimiter, Style["Parámetros Ballena", Bold],
+    {{rW, 0.03, "Tasa (r) [anual]"}, 0.01, 0.1, Appearance -> "Labeled"},
+    {{KW, 5000, "Capacidad (K)"}, 1000, 10000, Appearance -> "Labeled"},
+    {{n0W, 500, "Sobrevivientes (N0)"}, 100, 2000, Appearance -> "Labeled"},
+    Delimiter, {{timeW, 200, "Horizonte (Años)"}, 50, 500},
+    {{tActualW, 0, "Avanzar Años"}, 0, timeW}
+  ],
+
+  "3. Humanos (El debate de K)" -> Manipulate[
+    Column[{
+      Style["Población Humana Global", estiloTitulo],
+      Style["¿Cuál es nuestro límite? (Comparación de K)", Italic, Gray],
+      Grid[{{
+        Plot[logisticaN[t, rH, KH, n0H], {t, 0, timeH}, 
+          PlotRange -> {{0, timeH}, {0, 50}}, 
+          PlotStyle -> {colores["Humano"], Thickness[0.007]}, 
+          Frame -> True, FrameLabel -> {"Años desde ahora", "Mil Millones (Billions)"}, 
+          PlotLabel -> "Proyección Futura", ImageSize -> 300, 
+          Epilog -> {Red, Dashed, Line[{{0, KH}, {timeH, KH}}], 
+          Text[Style["K estimada", Red], {timeH * 0.8, KH * 1.05}], 
+          Gray, Line[{{0, 8}, {timeH, 8}}], Text["Hoy (8MM)", {5, 9}]}] ,
+        Plot[velocidadLog[n, rH, KH], {n, 0, 50}, 
+          PlotRange -> {{0, 50}, All}, 
+          PlotStyle -> {Purple, Thickness[0.007]}, 
+          Frame -> True, FrameLabel -> {"Población (Mil M)", "Crecimiento (Mil M/año)"}, 
+          PlotLabel -> "Velocidad de Cambio", ImageSize -> 300, Filling -> Axis, 
+          Epilog -> {Black, PointSize[0.02], Point[{logisticaN[tActualH, rH, KH, n0H], velocidadLog[logisticaN[tActualH, rH, KH, n0H], rH, KH]}]}]
+      }}],
+      Panel[
+        Module[{Nactual, terminoFreno, velActual, Nmillones},
+          Nactual = logisticaN[tActualH, rH, KH, n0H];
+          terminoFreno = (1 - Nactual / KH);
+          velActual = velocidadLog[Nactual, rH, KH];
+          Nmillones = velActual * 1000;
+          Column[{
+            Style["Debate sobre la Capacidad de Carga (K)", Bold, 14],
+            Text[StringForm["Si asumimos K = `` mil millones:", KH]],
+            Text[StringForm["Población simulada (N) = `` mil millones", NumberForm[Nactual, {4, 2}]]],
+            Text[StringForm["Factor ambiental (1-N/K) = ``", NumberForm[terminoFreno, {3, 2}]]],
+            Style[StringForm["Tasa de crecimiento resultante = `` millones personas/año", NumberForm[Nmillones, {5, 0}]], Purple, Bold],
+            If[KH <= 12 && Nactual >= 8, 
+               Style["Escenario Pesimista: Estamos chocando con el límite.\nCrecimiento se frena drásticamente.", Red], 
+               Style["Escenario Optimista (Tecnología): Aún hay espacio para crecer.\nEl crecimiento sigue siendo alto.", Darker[Green]]]
+          }]
+        ], Background -> LightOrange, ImageSize -> 600, Alignment -> Center]
+    }],
+    Delimiter, Style["Parámetros Globales", Bold],
+    {{rH, 0.01, "Tasa Actual (1%)"}, 0.005, 0.03, Appearance -> "Labeled"},
+    {{KH, 10, "Capacidad (K) [Mil Millones]"}, 8, 40, Appearance -> "Labeled"},
+    {{n0H, 8.0, "Población Actual (N0)"}, 6, 10, Appearance -> "Labeled"},
+    Delimiter, {{timeH, 100, "Años al futuro"}, 50, 200},
+    {{tActualH, 0, "Avanzar en el tiempo"}, 0, timeH}
+  ]
+}, LabelStyle -> {FontFamily -> "Arial", 14, Bold}, ControlPlacement -> Top]
