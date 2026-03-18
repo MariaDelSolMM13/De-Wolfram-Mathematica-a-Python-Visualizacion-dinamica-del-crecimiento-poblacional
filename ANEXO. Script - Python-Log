@@ -1,1 +1,1043 @@
+# ANEXO 1.
+# SCRIPT EN PYTHON
+#
+# ARTÍCULO "De Wolfram Mathematica a Python: Visualización # dinámica del crecimiento poblacional como estrategia de aprendizaje."
+#
+# AUTOR SCRIPT: Muñoz-Mortera María del Sol
+# email: ms.munozmortera@gmail.com
+#
+# ---------------------------------------------------------
+# Definición de Funciones Matemáticas (Modelo Logístico)
+# ---------------------------------------------------------
+def logistica_N(t, r, K, n0):
+    """Calcula la población N en el tiempo t."""
+    # Evitamos división por cero o exponentes extremos
+    exp_term = np.exp(-r * t)
+    return K / (1 + ((K - n0) / n0) * exp_term)
+#
+def velocidad_log(n, r, K):
+    """Calcula la velocidad instantánea dN/dt."""
+    return r * n * (1 - n / K)
+#
+# ---------------------------------------------------------
+# Configuración de Estilos y Colores
+# ---------------------------------------------------------
 
+# Diccionario
+colores = {
+    "Bacteria": "#32CD32",  # Verde
+    "Ballena": "#0066CC",   # Azul
+    "Humano": "#CC6600"     # Naranja/Marrón
+}
+
+plt.style.use('default')
+
+# ---------------------------------------------------------
+# Funciones de Visualización para cada Escenario
+# ---------------------------------------------------------
+
+def plot_bacterias(r, K, n0, max_time, t_actual):
+    # Generar datos
+    t_vals = np.linspace(0, max_time, 200)
+    N_vals = logistica_N(t_vals, r, K, n0)
+
+    # Valores actuales
+    N_now = logistica_N(t_actual, r, K, n0)
+    vel_now = velocidad_log(N_now, r, K)
+    freno = 1 - (N_now / K)
+
+    # Configuración de figura
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig.patch.set_facecolor('#FFFFE0') # LightYellow
+
+    # Gráfico 1: N vs t
+    ax1.plot(t_vals, N_vals, color=colores["Bacteria"], linewidth=3)
+    ax1.axhline(K, color='red', linestyle='--', label='K (Capacidad)')
+    ax1.scatter([t_actual], [N_now], color='black', s=100, zorder=5)
+    ax1.set_title("Curva de Crecimiento")
+    ax1.set_xlabel("Tiempo (Horas)")
+    ax1.set_ylabel("Millones de Bacterias")
+    ax1.set_ylim(0, K * 1.2)
+    ax1.grid(True, alpha=0.3)
+    ax1.legend()
+
+    # Gráfico 2: Velocidad vs N
+    n_axis = np.linspace(0, K * 1.1, 200)
+    v_axis = velocidad_log(n_axis, r, K)
+    ax2.plot(n_axis, v_axis, color='purple', linewidth=3)
+    ax2.fill_between(n_axis, v_axis, color='purple', alpha=0.1)
+    ax2.scatter([N_now], [vel_now], color='black', s=100, zorder=5)
+    ax2.set_title("Velocidad de Reproducción")
+    ax2.set_xlabel("Población (N)")
+    ax2.set_ylabel("Velocidad (Millones/hora)")
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Panel de Texto Dinámico
+    estado = "¡CUIDADO! Nutrientes agotándose, crecimiento casi nulo." if freno < 0.15 else "Crecimiento activo."
+    color_estado = "red" if freno < 0.15 else "green"
+
+    print(f"\n--- Análisis Matemático en t = {t_actual:.1f} horas ---")
+    print(f"Población Actual (N) = {N_now:.0f} millones")
+    print(f"Factor de Freno (1 - N/K) = (1 - {N_now:.0f}/{K}) = {freno:.3f}")
+    print(f"Velocidad dN/dt = {vel_now:.0f} millones/hora")
+    print(f"ESTADO: {estado}")
+
+
+def plot_ballenas(r, K, n0, max_time, t_actual):
+    t_vals = np.linspace(0, max_time, 200)
+    N_vals = logistica_N(t_vals, r, K, n0)
+
+    N_now = logistica_N(t_actual, r, K, n0)
+    vel_now = velocidad_log(N_now, r, K)
+    freno = 1 - (N_now / K)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig.patch.set_facecolor('#E0F7FA') # LightBlue
+
+    # Gráfico 1
+    ax1.plot(t_vals, N_vals, color=colores["Ballena"], linewidth=3)
+    ax1.axhline(K, color='red', linestyle='--', label='K')
+    ax1.scatter([t_actual], [N_now], color='black', s=100, zorder=5)
+    ax1.set_title("Recuperación Poblacional")
+    ax1.set_xlabel("Tiempo (Años)")
+    ax1.set_ylabel("Individuos")
+    ax1.set_ylim(0, K * 1.2)
+    ax1.grid(True, alpha=0.3)
+
+    # Gráfico 2
+    n_axis = np.linspace(0, K * 1.1, 200)
+    v_axis = velocidad_log(n_axis, r, K)
+    ax2.plot(n_axis, v_axis, color='purple', linewidth=3)
+    ax2.fill_between(n_axis, v_axis, color='purple', alpha=0.1)
+    ax2.scatter([N_now], [vel_now], color='black', s=100, zorder=5)
+    ax2.set_title("Tasa de Crecimiento")
+    ax2.set_xlabel("Población (N)")
+    ax2.set_ylabel("Nuevas Ballenas/Año")
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Texto
+    estado = "Población en peligro (muy baja)." if N_now < K * 0.2 else "Población estable o recuperándose."
+    print(f"\n--- Análisis en el año {t_actual:.0f} ---")
+    print(f"Población Actual (N) = {N_now:.0f} ballenas")
+    print(f"Espacio disponible (1 - N/K) = {freno:.3f}")
+    print(f"Crecimiento anual = {vel_now:.1f} ballenas/año")
+    print(f"ESTADO: {estado}")
+
+
+def plot_humanos(r, K, n0, max_time, t_actual):
+    t_vals = np.linspace(0, max_time, 200)
+    N_vals = logistica_N(t_vals, r, K, n0)
+
+    N_now = logistica_N(t_actual, r, K, n0)
+    vel_now = velocidad_log(N_now, r, K) # En Mil Millones
+    vel_millones = vel_now * 1000 # Convertir a Millones absolutos
+    freno = 1 - (N_now / K)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig.patch.set_facecolor('#FFE4B5') # LightOrange (Moccasin)
+
+    # Gráfico 1
+    ax1.plot(t_vals, N_vals, color=colores["Humano"], linewidth=3)
+    ax1.axhline(K, color='red', linestyle='--', label=f'K estimada ({K}MM)')
+    ax1.axhline(8, color='gray', linestyle=':', label='Hoy (8MM)')
+    ax1.scatter([t_actual], [N_now], color='black', s=100, zorder=5)
+    ax1.set_title("Proyección Futura (Humanos)")
+    ax1.set_xlabel("Años desde ahora")
+    ax1.set_ylabel("Mil Millones (Billions)")
+    ax1.set_ylim(0, max(50, K*1.2)) # Ajuste dinámico si K es muy grande
+    ax1.grid(True, alpha=0.3)
+    ax1.legend()
+
+    # Gráfico 2
+    n_axis = np.linspace(0, 50, 200)
+    v_axis = velocidad_log(n_axis, r, K)
+    ax2.plot(n_axis, v_axis, color='purple', linewidth=3)
+    ax2.fill_between(n_axis, v_axis, color='purple', alpha=0.1)
+    ax2.scatter([N_now], [vel_now], color='black', s=100, zorder=5)
+    ax2.set_title("Velocidad de Cambio")
+    ax2.set_xlabel("Población (Mil M)")
+    ax2.set_ylabel("Crecimiento (Mil M/año)")
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Texto Lógico
+    mensaje = ""
+    if K <= 12 and N_now >= 8:
+        mensaje = "ESCENARIO PESIMISTA: Estamos chocando con el límite. Crecimiento se frena drásticamente."
+    else:
+        mensaje = "ESCENARIO OPTIMISTA (Tecnología): Aún hay espacio para crecer. El crecimiento sigue alto."
+
+    print(f"\n--- Debate sobre la Capacidad de Carga (K) ---")
+    print(f"Si asumimos K = {K} mil millones:")
+    print(f"Población simulada (N) = {N_now:.2f} mil millones")
+    print(f"Factor ambiental (1 - N/K) = {freno:.3f}")
+    print(f"Tasa de crecimiento resultante = {vel_millones:.0f} millones personas/año")
+    print(f"CONCLUSIÓN: {mensaje}")
+
+
+# ---------------------------------------------------------
+# Creación de la Interfaz (Widgets)
+# ---------------------------------------------------------
+
+# --- Pestaña 1: Bacterias ---
+def ui_bacterias():
+    w_r = widgets.FloatSlider(value=3.0, min=1.0, max=5.0, step=0.1, description='Tasa (r)')
+    w_K = widgets.IntSlider(value=10000, min=5000, max=20000, step=100, description='Capacidad (K)')
+    w_n0 = widgets.IntSlider(value=100, min=10, max=500, step=10, description='Inicial (N0)')
+    w_time = widgets.IntSlider(value=10, min=5, max=24, step=1, description='Eje Tiempo')
+    w_t_act = widgets.FloatSlider(value=0, min=0, max=24, step=0.1, description='Simular T')
+
+    # Vincular límite de t_actual con w_time
+    def update_t_range(*args):
+        w_t_act.max = w_time.value
+    w_time.observe(update_t_range, 'value')
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>1. Bacterias (E. coli)</h3><p><i>Crecimiento rápido en espacio limitado</i></p>"),
+        widgets.HBox([w_r, w_K, w_n0]),
+        widgets.HBox([w_time, w_t_act]),
+        widgets.interactive_output(plot_bacterias,
+                                   {'r': w_r, 'K': w_K, 'n0': w_n0, 'max_time': w_time, 't_actual': w_t_act})
+    ])
+    return ui
+
+# --- Pestaña 2: Ballenas ---
+def ui_ballenas():
+    w_r = widgets.FloatSlider(value=0.03, min=0.01, max=0.1, step=0.005, description='Tasa (r)')
+    w_K = widgets.IntSlider(value=5000, min=1000, max=10000, step=100, description='Capacidad (K)')
+    w_n0 = widgets.IntSlider(value=500, min=100, max=2000, step=50, description='Inicial (N0)')
+    w_time = widgets.IntSlider(value=200, min=50, max=500, step=10, description='Horizonte')
+    w_t_act = widgets.FloatSlider(value=0, min=0, max=500, step=1, description='Año Actual')
+
+    def update_t_range(*args):
+        w_t_act.max = w_time.value
+    w_time.observe(update_t_range, 'value')
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>2. Ballenas (Estrategia K)</h3><p><i>Recuperación lenta y estabilidad a largo plazo</i></p>"),
+        widgets.HBox([w_r, w_K, w_n0]),
+        widgets.HBox([w_time, w_t_act]),
+        widgets.interactive_output(plot_ballenas,
+                                   {'r': w_r, 'K': w_K, 'n0': w_n0, 'max_time': w_time, 't_actual': w_t_act})
+    ])
+    return ui
+
+# --- Pestaña 3: Humanos ---
+def ui_humanos():
+    w_r = widgets.FloatSlider(value=0.01, min=0.005, max=0.03, step=0.001, description='Tasa (r)')
+    w_K = widgets.IntSlider(value=10, min=8, max=40, step=1, description='K (Mil M)')
+    w_n0 = widgets.FloatSlider(value=8.0, min=6.0, max=10.0, step=0.1, description='N0 (Actual)')
+    w_time = widgets.IntSlider(value=100, min=50, max=200, step=10, description='Futuro (Años)')
+    w_t_act = widgets.FloatSlider(value=0, min=0, max=200, step=1, description='Avanzar T')
+
+    def update_t_range(*args):
+        w_t_act.max = w_time.value
+    w_time.observe(update_t_range, 'value')
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>3. Humanos (El debate de K)</h3><p><i>¿Cuál es nuestro límite? Escenarios pesimistas vs optimistas</i></p>"),
+        widgets.HBox([w_r, w_K, w_n0]),
+        widgets.HBox([w_time, w_t_act]),
+        widgets.interactive_output(plot_humanos,
+                                   {'r': w_r, 'K': w_K, 'n0': w_n0, 'max_time': w_time, 't_actual': w_t_act})
+    ])
+    return ui
+
+# ---------------------------------------------------------
+# Ejecución Principal (TabView)
+# ---------------------------------------------------------
+tab = widgets.Tab(children=[ui_bacterias(), ui_ballenas(), ui_humanos()])
+tab.set_title(0, 'Bacterias')
+tab.set_title(1, 'Ballenas')
+tab.set_title(2, 'Humanos')
+
+display(tab)
+#--------------------------------------------------
+# ---------------------------------------------------------
+# 5. Modelo Multi-Especie (Bacterias, Ballenas, Humanos)
+# ---------------------------------------------------------
+
+
+# ---------------------------------------------------------
+# Definición de Funciones Matemáticas (Modelo Logístico)
+# ---------------------------------------------------------
+def logistica_N(t, r, K, n0):
+    """Calcula la población N en el tiempo t."""
+    # Evitamos división por cero o exponentes extremos
+    exp_term = np.exp(-r * t)
+    return K / (1 + ((K - n0) / n0) * exp_term)
+
+def velocidad_log(n, r, K):
+    """Calcula la velocidad instantánea dN/dt."""
+    return r * n * (1 - n / K)
+
+# ---------------------------------------------------------
+# Configuración de Estilos y Colores
+# ---------------------------------------------------------
+
+# Diccionario
+colores = {
+    "Bacteria": "#32CD32",  # Verde
+    "Ballena": "#0066CC",   # Azul
+    "Humano": "#CC6600"     # Naranja/Marrón
+}
+
+plt.style.use('default')
+
+# ---------------------------------------------------------
+# Funciones de Visualización para cada Escenario
+# ---------------------------------------------------------
+
+def plot_bacterias(r, K, n0, max_time, t_actual):
+    # Generar datos
+    t_vals = np.linspace(0, max_time, 200)
+    N_vals = logistica_N(t_vals, r, K, n0)
+
+    # Valores actuales
+    N_now = logistica_N(t_actual, r, K, n0)
+    vel_now = velocidad_log(N_now, r, K)
+    freno = 1 - (N_now / K)
+
+    # Configuración de figura
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig.patch.set_facecolor('#FFFFE0') # LightYellow
+
+    # Gráfico 1: N vs t
+    ax1.plot(t_vals, N_vals, color=colores["Bacteria"], linewidth=3)
+    ax1.axhline(K, color='red', linestyle='--', label='K (Capacidad)')
+    ax1.scatter([t_actual], [N_now], color='black', s=100, zorder=5)
+    ax1.set_title("Curva de Crecimiento")
+    ax1.set_xlabel("Tiempo (Horas)")
+    ax1.set_ylabel("Millones de Bacterias")
+    ax1.set_ylim(0, K * 1.2)
+    ax1.grid(True, alpha=0.3)
+    ax1.legend()
+
+    # Gráfico 2: Velocidad vs N
+    n_axis = np.linspace(0, K * 1.1, 200)
+    v_axis = velocidad_log(n_axis, r, K)
+    ax2.plot(n_axis, v_axis, color='purple', linewidth=3)
+    ax2.fill_between(n_axis, v_axis, color='purple', alpha=0.1)
+    ax2.scatter([N_now], [vel_now], color='black', s=100, zorder=5)
+    ax2.set_title("Velocidad de Reproducción")
+    ax2.set_xlabel("Población (N)")
+    ax2.set_ylabel("Velocidad (Millones/hora)")
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Panel de Texto Dinámico
+    estado = "¡CUIDADO! Nutrientes agotándose, crecimiento casi nulo." if freno < 0.15 else "Crecimiento activo."
+    color_estado = "red" if freno < 0.15 else "green"
+
+    print(f"\n--- Análisis Matemático en t = {t_actual:.1f} horas ---")
+    print(f"Población Actual (N) = {N_now:.0f} millones")
+    print(f"Factor de Freno (1 - N/K) = (1 - {N_now:.0f}/{K}) = {freno:.3f}")
+    print(f"Velocidad dN/dt = {vel_now:.0f} millones/hora")
+    print(f"ESTADO: {estado}")
+
+
+def plot_ballenas(r, K, n0, max_time, t_actual):
+    t_vals = np.linspace(0, max_time, 200)
+    N_vals = logistica_N(t_vals, r, K, n0)
+
+    N_now = logistica_N(t_actual, r, K, n0)
+    vel_now = velocidad_log(N_now, r, K)
+    freno = 1 - (N_now / K)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig.patch.set_facecolor('#E0F7FA') # LightBlue
+
+    # Gráfico 1
+    ax1.plot(t_vals, N_vals, color=colores["Ballena"], linewidth=3)
+    ax1.axhline(K, color='red', linestyle='--', label='K')
+    ax1.scatter([t_actual], [N_now], color='black', s=100, zorder=5)
+    ax1.set_title("Recuperación Poblacional")
+    ax1.set_xlabel("Tiempo (Años)")
+    ax1.set_ylabel("Individuos")
+    ax1.set_ylim(0, K * 1.2)
+    ax1.grid(True, alpha=0.3)
+
+    # Gráfico 2
+    n_axis = np.linspace(0, K * 1.1, 200)
+    v_axis = velocidad_log(n_axis, r, K)
+    ax2.plot(n_axis, v_axis, color='purple', linewidth=3)
+    ax2.fill_between(n_axis, v_axis, color='purple', alpha=0.1)
+    ax2.scatter([N_now], [vel_now], color='black', s=100, zorder=5)
+    ax2.set_title("Tasa de Crecimiento")
+    ax2.set_xlabel("Población (N)")
+    ax2.set_ylabel("Nuevas Ballenas/Año")
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Texto
+    estado = "Población en peligro (muy baja)." if N_now < K * 0.2 else "Población estable o recuperándose."
+    print(f"\n--- Análisis en el año {t_actual:.0f} ---")
+    print(f"Población Actual (N) = {N_now:.0f} ballenas")
+    print(f"Espacio disponible (1 - N/K) = {freno:.3f}")
+    print(f"Crecimiento anual = {vel_now:.1f} ballenas/año")
+    print(f"ESTADO: {estado}")
+
+
+def plot_humanos(r, K, n0, max_time, t_actual):
+    t_vals = np.linspace(0, max_time, 200)
+    N_vals = logistica_N(t_vals, r, K, n0)
+
+    N_now = logistica_N(t_actual, r, K, n0)
+    vel_now = velocidad_log(N_now, r, K) # En Mil Millones
+    vel_millones = vel_now * 1000 # Convertir a Millones absolutos
+    freno = 1 - (N_now / K)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig.patch.set_facecolor('#FFE4B5') # LightOrange (Moccasin)
+
+    # Gráfico 1
+    ax1.plot(t_vals, N_vals, color=colores["Humano"], linewidth=3)
+    ax1.axhline(K, color='red', linestyle='--', label=f'K estimada ({K}MM)')
+    ax1.axhline(8, color='gray', linestyle=':', label='Hoy (8MM)')
+    ax1.scatter([t_actual], [N_now], color='black', s=100, zorder=5)
+    ax1.set_title("Proyección Futura (Humanos)")
+    ax1.set_xlabel("Años desde ahora")
+    ax1.set_ylabel("Mil Millones (Billions)")
+    ax1.set_ylim(0, max(50, K*1.2)) # Ajuste dinámico si K es muy grande
+    ax1.grid(True, alpha=0.3)
+    ax1.legend()
+
+    # Gráfico 2
+    n_axis = np.linspace(0, 50, 200)
+    v_axis = velocidad_log(n_axis, r, K)
+    ax2.plot(n_axis, v_axis, color='purple', linewidth=3)
+    ax2.fill_between(n_axis, v_axis, color='purple', alpha=0.1)
+    ax2.scatter([N_now], [vel_now], color='black', s=100, zorder=5)
+    ax2.set_title("Velocidad de Cambio")
+    ax2.set_xlabel("Población (Mil M)")
+    ax2.set_ylabel("Crecimiento (Mil M/año)")
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Texto Lógico
+    mensaje = ""
+    if K <= 12 and N_now >= 8:
+        mensaje = "ESCENARIO PESIMISTA: Estamos chocando con el límite. Crecimiento se frena drásticamente."
+    else:
+        mensaje = "ESCENARIO OPTIMISTA (Tecnología): Aún hay espacio para crecer. El crecimiento sigue alto."
+
+    print(f"\n--- Debate sobre la Capacidad de Carga (K) ---")
+    print(f"Si asumimos K = {K} mil millones:")
+    print(f"Población simulada (N) = {N_now:.2f} mil millones")
+    print(f"Factor ambiental (1 - N/K) = {freno:.3f}")
+    print(f"Tasa de crecimiento resultante = {vel_millones:.0f} millones personas/año")
+    print(f"CONCLUSIÓN: {mensaje}")
+
+
+# ---------------------------------------------------------
+# Creación de la Interfaz (Widgets)
+# ---------------------------------------------------------
+
+# --- Pestaña 1: Bacterias ---
+def ui_bacterias():
+    w_r = widgets.FloatSlider(value=3.0, min=1.0, max=5.0, step=0.1, description='Tasa (r)')
+    w_K = widgets.IntSlider(value=10000, min=5000, max=20000, step=100, description='Capacidad (K)')
+    w_n0 = widgets.IntSlider(value=100, min=10, max=500, step=10, description='Inicial (N0)')
+    w_time = widgets.IntSlider(value=10, min=5, max=24, step=1, description='Eje Tiempo')
+    w_t_act = widgets.FloatSlider(value=0, min=0, max=24, step=0.1, description='Simular T')
+
+    # Vincular límite de t_actual con w_time
+    def update_t_range(*args):
+        w_t_act.max = w_time.value
+    w_time.observe(update_t_range, 'value')
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>1. Bacterias (E. coli)</h3><p><i>Crecimiento rápido en espacio limitado</i></p>"),
+        widgets.HBox([w_r, w_K, w_n0]),
+        widgets.HBox([w_time, w_t_act]),
+        widgets.interactive_output(plot_bacterias,
+                                   {'r': w_r, 'K': w_K, 'n0': w_n0, 'max_time': w_time, 't_actual': w_t_act})
+    ])
+    return ui
+
+# --- Pestaña 2: Ballenas ---
+def ui_ballenas():
+    w_r = widgets.FloatSlider(value=0.03, min=0.01, max=0.1, step=0.005, description='Tasa (r)')
+    w_K = widgets.IntSlider(value=5000, min=1000, max=10000, step=100, description='Capacidad (K)')
+    w_n0 = widgets.IntSlider(value=500, min=100, max=2000, step=50, description='Inicial (N0)')
+    w_time = widgets.IntSlider(value=200, min=50, max=500, step=10, description='Horizonte')
+    w_t_act = widgets.FloatSlider(value=0, min=0, max=500, step=1, description='Año Actual')
+
+    def update_t_range(*args):
+        w_t_act.max = w_time.value
+    w_time.observe(update_t_range, 'value')
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>2. Ballenas (Estrategia K)</h3><p><i>Recuperación lenta y estabilidad a largo plazo</i></p>"),
+        widgets.HBox([w_r, w_K, w_n0]),
+        widgets.HBox([w_time, w_t_act]),
+        widgets.interactive_output(plot_ballenas,
+                                   {'r': w_r, 'K': w_K, 'n0': w_n0, 'max_time': w_time, 't_actual': w_t_act})
+    ])
+    return ui
+
+# --- Pestaña 3: Humanos ---
+def ui_humanos():
+    w_r = widgets.FloatSlider(value=0.01, min=0.005, max=0.03, step=0.001, description='Tasa (r)')
+    w_K = widgets.IntSlider(value=10, min=8, max=40, step=1, description='K (Mil M)')
+    w_n0 = widgets.FloatSlider(value=8.0, min=6.0, max=10.0, step=0.1, description='N0 (Actual)')
+    w_time = widgets.IntSlider(value=100, min=50, max=200, step=10, description='Futuro (Años)')
+    w_t_act = widgets.FloatSlider(value=0, min=0, max=200, step=1, description='Avanzar T')
+
+    def update_t_range(*args):
+        w_t_act.max = w_time.value
+    w_time.observe(update_t_range, 'value')
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>3. Humanos (El debate de K)</h3><p><i>¿Cuál es nuestro límite? Escenarios pesimistas vs optimistas</i></p>"),
+        widgets.HBox([w_r, w_K, w_n0]),
+        widgets.HBox([w_time, w_t_act]),
+        widgets.interactive_output(plot_humanos,
+                                   {'r': w_r, 'K': w_K, 'n0': w_n0, 'max_time': w_time, 't_actual': w_t_act})
+    ])
+    return ui
+
+# ---------------------------------------------------------
+# Ejecución Principal (TabView)
+# ---------------------------------------------------------
+tab = widgets.Tab(children=[ui_bacterias(), ui_ballenas(), ui_humanos()])
+tab.set_title(0, 'Bacterias')
+tab.set_title(1, 'Ballenas')
+tab.set_title(2, 'Humanos')
+
+display(tab)
+#-----------------------------------------------------------
+# ---------------------------------------------------------
+# 5. Modelo Multi-Especie (Bacterias, Ballenas, Humanos)
+# ---------------------------------------------------------
+
+
+# ---------------------------------------------------------
+# Definición de Funciones Matemáticas (Modelo Logístico)
+# ---------------------------------------------------------
+def logistica_N(t, r, K, n0):
+    """Calcula la población N en el tiempo t."""
+    # Evitamos división por cero o exponentes extremos
+    exp_term = np.exp(-r * t)
+    return K / (1 + ((K - n0) / n0) * exp_term)
+
+def velocidad_log(n, r, K):
+    """Calcula la velocidad instantánea dN/dt."""
+    return r * n * (1 - n / K)
+
+# ---------------------------------------------------------
+# Configuración de Estilos y Colores
+# ---------------------------------------------------------
+
+# Diccionario
+colores = {
+    "Bacteria": "#32CD32",  # Verde
+    "Ballena": "#0066CC",   # Azul
+    "Humano": "#CC6600"     # Naranja/Marrón
+}
+
+plt.style.use('default')
+
+# ---------------------------------------------------------
+# Funciones de Visualización para cada Escenario
+# ---------------------------------------------------------
+
+def plot_bacterias(r, K, n0, max_time, t_actual):
+    # Generar datos
+    t_vals = np.linspace(0, max_time, 200)
+    N_vals = logistica_N(t_vals, r, K, n0)
+
+    # Valores actuales
+    N_now = logistica_N(t_actual, r, K, n0)
+    vel_now = velocidad_log(N_now, r, K)
+    freno = 1 - (N_now / K)
+
+    # Configuración de figura
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig.patch.set_facecolor('#FFFFE0') # LightYellow
+
+    # Gráfico 1: N vs t
+    ax1.plot(t_vals, N_vals, color=colores["Bacteria"], linewidth=3)
+    ax1.axhline(K, color='red', linestyle='--', label='K (Capacidad)')
+    ax1.scatter([t_actual], [N_now], color='black', s=100, zorder=5)
+    ax1.set_title("Curva de Crecimiento")
+    ax1.set_xlabel("Tiempo (Horas)")
+    ax1.set_ylabel("Millones de Bacterias")
+    ax1.set_ylim(0, K * 1.2)
+    ax1.grid(True, alpha=0.3)
+    ax1.legend()
+
+    # Gráfico 2: Velocidad vs N
+    n_axis = np.linspace(0, K * 1.1, 200)
+    v_axis = velocidad_log(n_axis, r, K)
+    ax2.plot(n_axis, v_axis, color='purple', linewidth=3)
+    ax2.fill_between(n_axis, v_axis, color='purple', alpha=0.1)
+    ax2.scatter([N_now], [vel_now], color='black', s=100, zorder=5)
+    ax2.set_title("Velocidad de Reproducción")
+    ax2.set_xlabel("Población (N)")
+    ax2.set_ylabel("Velocidad (Millones/hora)")
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Panel de Texto Dinámico
+    estado = "¡CUIDADO! Nutrientes agotándose, crecimiento casi nulo." if freno < 0.15 else "Crecimiento activo."
+    color_estado = "red" if freno < 0.15 else "green"
+
+    print(f"\n--- Análisis Matemático en t = {t_actual:.1f} horas ---")
+    print(f"Población Actual (N) = {N_now:.0f} millones")
+    print(f"Factor de Freno (1 - N/K) = (1 - {N_now:.0f}/{K}) = {freno:.3f}")
+    print(f"Velocidad dN/dt = {vel_now:.0f} millones/hora")
+    print(f"ESTADO: {estado}")
+
+
+def plot_ballenas(r, K, n0, max_time, t_actual):
+    t_vals = np.linspace(0, max_time, 200)
+    N_vals = logistica_N(t_vals, r, K, n0)
+
+    N_now = logistica_N(t_actual, r, K, n0)
+    vel_now = velocidad_log(N_now, r, K)
+    freno = 1 - (N_now / K)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig.patch.set_facecolor('#E0F7FA') # LightBlue
+
+    # Gráfico 1
+    ax1.plot(t_vals, N_vals, color=colores["Ballena"], linewidth=3)
+    ax1.axhline(K, color='red', linestyle='--', label='K')
+    ax1.scatter([t_actual], [N_now], color='black', s=100, zorder=5)
+    ax1.set_title("Recuperación Poblacional")
+    ax1.set_xlabel("Tiempo (Años)")
+    ax1.set_ylabel("Individuos")
+    ax1.set_ylim(0, K * 1.2)
+    ax1.grid(True, alpha=0.3)
+
+    # Gráfico 2
+    n_axis = np.linspace(0, K * 1.1, 200)
+    v_axis = velocidad_log(n_axis, r, K)
+    ax2.plot(n_axis, v_axis, color='purple', linewidth=3)
+    ax2.fill_between(n_axis, v_axis, color='purple', alpha=0.1)
+    ax2.scatter([N_now], [vel_now], color='black', s=100, zorder=5)
+    ax2.set_title("Tasa de Crecimiento")
+    ax2.set_xlabel("Población (N)")
+    ax2.set_ylabel("Nuevas Ballenas/Año")
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Texto
+    estado = "Población en peligro (muy baja)." if N_now < K * 0.2 else "Población estable o recuperándose."
+    print(f"\n--- Análisis en el año {t_actual:.0f} ---")
+    print(f"Población Actual (N) = {N_now:.0f} ballenas")
+    print(f"Espacio disponible (1 - N/K) = {freno:.3f}")
+    print(f"Crecimiento anual = {vel_now:.1f} ballenas/año")
+    print(f"ESTADO: {estado}")
+
+
+def plot_humanos(r, K, n0, max_time, t_actual):
+    t_vals = np.linspace(0, max_time, 200)
+    N_vals = logistica_N(t_vals, r, K, n0)
+
+    N_now = logistica_N(t_actual, r, K, n0)
+    vel_now = velocidad_log(N_now, r, K) # En Mil Millones
+    vel_millones = vel_now * 1000 # Convertir a Millones absolutos
+    freno = 1 - (N_now / K)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig.patch.set_facecolor('#FFE4B5') # LightOrange (Moccasin)
+
+    # Gráfico 1
+    ax1.plot(t_vals, N_vals, color=colores["Humano"], linewidth=3)
+    ax1.axhline(K, color='red', linestyle='--', label=f'K estimada ({K}MM)')
+    ax1.axhline(8, color='gray', linestyle=':', label='Hoy (8MM)')
+    ax1.scatter([t_actual], [N_now], color='black', s=100, zorder=5)
+    ax1.set_title("Proyección Futura (Humanos)")
+    ax1.set_xlabel("Años desde ahora")
+    ax1.set_ylabel("Mil Millones (Billions)")
+    ax1.set_ylim(0, max(50, K*1.2)) # Ajuste dinámico si K es muy grande
+    ax1.grid(True, alpha=0.3)
+    ax1.legend()
+
+    # Gráfico 2
+    n_axis = np.linspace(0, 50, 200)
+    v_axis = velocidad_log(n_axis, r, K)
+    ax2.plot(n_axis, v_axis, color='purple', linewidth=3)
+    ax2.fill_between(n_axis, v_axis, color='purple', alpha=0.1)
+    ax2.scatter([N_now], [vel_now], color='black', s=100, zorder=5)
+    ax2.set_title("Velocidad de Cambio")
+    ax2.set_xlabel("Población (Mil M)")
+    ax2.set_ylabel("Crecimiento (Mil M/año)")
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Texto Lógico
+    mensaje = ""
+    if K <= 12 and N_now >= 8:
+        mensaje = "ESCENARIO PESIMISTA: Estamos chocando con el límite. Crecimiento se frena drásticamente."
+    else:
+        mensaje = "ESCENARIO OPTIMISTA (Tecnología): Aún hay espacio para crecer. El crecimiento sigue alto."
+
+    print(f"\n--- Debate sobre la Capacidad de Carga (K) ---")
+    print(f"Si asumimos K = {K} mil millones:")
+    print(f"Población simulada (N) = {N_now:.2f} mil millones")
+    print(f"Factor ambiental (1 - N/K) = {freno:.3f}")
+    print(f"Tasa de crecimiento resultante = {vel_millones:.0f} millones personas/año")
+    print(f"CONCLUSIÓN: {mensaje}")
+
+
+# ---------------------------------------------------------
+# Creación de la Interfaz (Widgets)
+# ---------------------------------------------------------
+
+# --- Pestaña 1: Bacterias ---
+def ui_bacterias():
+    w_r = widgets.FloatSlider(value=3.0, min=1.0, max=5.0, step=0.1, description='Tasa (r)')
+    w_K = widgets.IntSlider(value=10000, min=5000, max=20000, step=100, description='Capacidad (K)')
+    w_n0 = widgets.IntSlider(value=100, min=10, max=500, step=10, description='Inicial (N0)')
+    w_time = widgets.IntSlider(value=10, min=5, max=24, step=1, description='Eje Tiempo')
+    w_t_act = widgets.FloatSlider(value=0, min=0, max=24, step=0.1, description='Simular T')
+
+    # Vincular límite de t_actual con w_time
+    def update_t_range(*args):
+        w_t_act.max = w_time.value
+    w_time.observe(update_t_range, 'value')
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>1. Bacterias (E. coli)</h3><p><i>Crecimiento rápido en espacio limitado</i></p>"),
+        widgets.HBox([w_r, w_K, w_n0]),
+        widgets.HBox([w_time, w_t_act]),
+        widgets.interactive_output(plot_bacterias,
+                                   {'r': w_r, 'K': w_K, 'n0': w_n0, 'max_time': w_time, 't_actual': w_t_act})
+    ])
+    return ui
+
+# --- Pestaña 2: Ballenas ---
+def ui_ballenas():
+    w_r = widgets.FloatSlider(value=0.03, min=0.01, max=0.1, step=0.005, description='Tasa (r)')
+    w_K = widgets.IntSlider(value=5000, min=1000, max=10000, step=100, description='Capacidad (K)')
+    w_n0 = widgets.IntSlider(value=500, min=100, max=2000, step=50, description='Inicial (N0)')
+    w_time = widgets.IntSlider(value=200, min=50, max=500, step=10, description='Horizonte')
+    w_t_act = widgets.FloatSlider(value=0, min=0, max=500, step=1, description='Año Actual')
+
+    def update_t_range(*args):
+        w_t_act.max = w_time.value
+    w_time.observe(update_t_range, 'value')
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>2. Ballenas (Estrategia K)</h3><p><i>Recuperación lenta y estabilidad a largo plazo</i></p>"),
+        widgets.HBox([w_r, w_K, w_n0]),
+        widgets.HBox([w_time, w_t_act]),
+        widgets.interactive_output(plot_ballenas,
+                                   {'r': w_r, 'K': w_K, 'n0': w_n0, 'max_time': w_time, 't_actual': w_t_act})
+    ])
+    return ui
+
+# --- Pestaña 3: Humanos ---
+def ui_humanos():
+    w_r = widgets.FloatSlider(value=0.01, min=0.005, max=0.03, step=0.001, description='Tasa (r)')
+    w_K = widgets.IntSlider(value=10, min=8, max=40, step=1, description='K (Mil M)')
+    w_n0 = widgets.FloatSlider(value=8.0, min=6.0, max=10.0, step=0.1, description='N0 (Actual)')
+    w_time = widgets.IntSlider(value=100, min=50, max=200, step=10, description='Futuro (Años)')
+    w_t_act = widgets.FloatSlider(value=0, min=0, max=200, step=1, description='Avanzar T')
+
+    def update_t_range(*args):
+        w_t_act.max = w_time.value
+    w_time.observe(update_t_range, 'value')
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>3. Humanos (El debate de K)</h3><p><i>¿Cuál es nuestro límite? Escenarios pesimistas vs optimistas</i></p>"),
+        widgets.HBox([w_r, w_K, w_n0]),
+        widgets.HBox([w_time, w_t_act]),
+        widgets.interactive_output(plot_humanos,
+                                   {'r': w_r, 'K': w_K, 'n0': w_n0, 'max_time': w_time, 't_actual': w_t_act})
+    ])
+    return ui
+
+# ---------------------------------------------------------
+# Ejecución Principal (TabView)
+# ---------------------------------------------------------
+tab = widgets.Tab(children=[ui_bacterias(), ui_ballenas(), ui_humanos()])
+tab.set_title(0, 'Bacterias')
+tab.set_title(1, 'Ballenas')
+tab.set_title(2, 'Humanos')
+
+display(tab)
+
+#------------------------------------------
+# ---------------------------------------------------------
+# 5. Modelo Multi-Especie (Bacterias, Ballenas, Humanos)
+# ---------------------------------------------------------
+
+
+# ---------------------------------------------------------
+# Definición de Funciones Matemáticas (Modelo Logístico)
+# ---------------------------------------------------------
+def logistica_N(t, r, K, n0):
+    """Calcula la población N en el tiempo t."""
+    # Evitamos división por cero o exponentes extremos
+    exp_term = np.exp(-r * t)
+    return K / (1 + ((K - n0) / n0) * exp_term)
+
+def velocidad_log(n, r, K):
+    """Calcula la velocidad instantánea dN/dt."""
+    return r * n * (1 - n / K)
+
+# ---------------------------------------------------------
+# Configuración de Estilos y Colores
+# ---------------------------------------------------------
+
+# Diccionario
+colores = {
+    "Bacteria": "#32CD32",  # Verde
+    "Ballena": "#0066CC",   # Azul
+    "Humano": "#CC6600"     # Naranja/Marrón
+}
+
+plt.style.use('default')
+
+# ---------------------------------------------------------
+# Funciones de Visualización para cada Escenario
+# ---------------------------------------------------------
+
+def plot_bacterias(r, K, n0, max_time, t_actual):
+    # Generar datos
+    t_vals = np.linspace(0, max_time, 200)
+    N_vals = logistica_N(t_vals, r, K, n0)
+
+    # Valores actuales
+    N_now = logistica_N(t_actual, r, K, n0)
+    vel_now = velocidad_log(N_now, r, K)
+    freno = 1 - (N_now / K)
+
+    # Configuración de figura
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig.patch.set_facecolor('#FFFFE0') # LightYellow
+
+    # Gráfico 1: N vs t
+    ax1.plot(t_vals, N_vals, color=colores["Bacteria"], linewidth=3)
+    ax1.axhline(K, color='red', linestyle='--', label='K (Capacidad)')
+    ax1.scatter([t_actual], [N_now], color='black', s=100, zorder=5)
+    ax1.set_title("Curva de Crecimiento")
+    ax1.set_xlabel("Tiempo (Horas)")
+    ax1.set_ylabel("Millones de Bacterias")
+    ax1.set_ylim(0, K * 1.2)
+    ax1.grid(True, alpha=0.3)
+    ax1.legend()
+
+    # Gráfico 2: Velocidad vs N
+    n_axis = np.linspace(0, K * 1.1, 200)
+    v_axis = velocidad_log(n_axis, r, K)
+    ax2.plot(n_axis, v_axis, color='purple', linewidth=3)
+    ax2.fill_between(n_axis, v_axis, color='purple', alpha=0.1)
+    ax2.scatter([N_now], [vel_now], color='black', s=100, zorder=5)
+    ax2.set_title("Velocidad de Reproducción")
+    ax2.set_xlabel("Población (N)")
+    ax2.set_ylabel("Velocidad (Millones/hora)")
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Panel de Texto Dinámico
+    estado = "¡CUIDADO! Nutrientes agotándose, crecimiento casi nulo." if freno < 0.15 else "Crecimiento activo."
+    color_estado = "red" if freno < 0.15 else "green"
+
+    print(f"\n--- Análisis Matemático en t = {t_actual:.1f} horas ---")
+    print(f"Población Actual (N) = {N_now:.0f} millones")
+    print(f"Factor de Freno (1 - N/K) = (1 - {N_now:.0f}/{K}) = {freno:.3f}")
+    print(f"Velocidad dN/dt = {vel_now:.0f} millones/hora")
+    print(f"ESTADO: {estado}")
+
+
+def plot_ballenas(r, K, n0, max_time, t_actual):
+    t_vals = np.linspace(0, max_time, 200)
+    N_vals = logistica_N(t_vals, r, K, n0)
+
+    N_now = logistica_N(t_actual, r, K, n0)
+    vel_now = velocidad_log(N_now, r, K)
+    freno = 1 - (N_now / K)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig.patch.set_facecolor('#E0F7FA') # LightBlue
+
+    # Gráfico 1
+    ax1.plot(t_vals, N_vals, color=colores["Ballena"], linewidth=3)
+    ax1.axhline(K, color='red', linestyle='--', label='K')
+    ax1.scatter([t_actual], [N_now], color='black', s=100, zorder=5)
+    ax1.set_title("Recuperación Poblacional")
+    ax1.set_xlabel("Tiempo (Años)")
+    ax1.set_ylabel("Individuos")
+    ax1.set_ylim(0, K * 1.2)
+    ax1.grid(True, alpha=0.3)
+
+    # Gráfico 2
+    n_axis = np.linspace(0, K * 1.1, 200)
+    v_axis = velocidad_log(n_axis, r, K)
+    ax2.plot(n_axis, v_axis, color='purple', linewidth=3)
+    ax2.fill_between(n_axis, v_axis, color='purple', alpha=0.1)
+    ax2.scatter([N_now], [vel_now], color='black', s=100, zorder=5)
+    ax2.set_title("Tasa de Crecimiento")
+    ax2.set_xlabel("Población (N)")
+    ax2.set_ylabel("Nuevas Ballenas/Año")
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Texto
+    estado = "Población en peligro (muy baja)." if N_now < K * 0.2 else "Población estable o recuperándose."
+    print(f"\n--- Análisis en el año {t_actual:.0f} ---")
+    print(f"Población Actual (N) = {N_now:.0f} ballenas")
+    print(f"Espacio disponible (1 - N/K) = {freno:.3f}")
+    print(f"Crecimiento anual = {vel_now:.1f} ballenas/año")
+    print(f"ESTADO: {estado}")
+
+
+def plot_humanos(r, K, n0, max_time, t_actual):
+    t_vals = np.linspace(0, max_time, 200)
+    N_vals = logistica_N(t_vals, r, K, n0)
+
+    N_now = logistica_N(t_actual, r, K, n0)
+    vel_now = velocidad_log(N_now, r, K) # En Mil Millones
+    vel_millones = vel_now * 1000 # Convertir a Millones absolutos
+    freno = 1 - (N_now / K)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    fig.patch.set_facecolor('#FFE4B5') # LightOrange (Moccasin)
+
+    # Gráfico 1
+    ax1.plot(t_vals, N_vals, color=colores["Humano"], linewidth=3)
+    ax1.axhline(K, color='red', linestyle='--', label=f'K estimada ({K}MM)')
+    ax1.axhline(8, color='gray', linestyle=':', label='Hoy (8MM)')
+    ax1.scatter([t_actual], [N_now], color='black', s=100, zorder=5)
+    ax1.set_title("Proyección Futura (Humanos)")
+    ax1.set_xlabel("Años desde ahora")
+    ax1.set_ylabel("Mil Millones (Billions)")
+    ax1.set_ylim(0, max(50, K*1.2)) # Ajuste dinámico si K es muy grande
+    ax1.grid(True, alpha=0.3)
+    ax1.legend()
+
+    # Gráfico 2
+    n_axis = np.linspace(0, 50, 200)
+    v_axis = velocidad_log(n_axis, r, K)
+    ax2.plot(n_axis, v_axis, color='purple', linewidth=3)
+    ax2.fill_between(n_axis, v_axis, color='purple', alpha=0.1)
+    ax2.scatter([N_now], [vel_now], color='black', s=100, zorder=5)
+    ax2.set_title("Velocidad de Cambio")
+    ax2.set_xlabel("Población (Mil M)")
+    ax2.set_ylabel("Crecimiento (Mil M/año)")
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    # Texto Lógico
+    mensaje = ""
+    if K <= 12 and N_now >= 8:
+        mensaje = "ESCENARIO PESIMISTA: Estamos chocando con el límite. Crecimiento se frena drásticamente."
+    else:
+        mensaje = "ESCENARIO OPTIMISTA (Tecnología): Aún hay espacio para crecer. El crecimiento sigue alto."
+
+    print(f"\n--- Debate sobre la Capacidad de Carga (K) ---")
+    print(f"Si asumimos K = {K} mil millones:")
+    print(f"Población simulada (N) = {N_now:.2f} mil millones")
+    print(f"Factor ambiental (1 - N/K) = {freno:.3f}")
+    print(f"Tasa de crecimiento resultante = {vel_millones:.0f} millones personas/año")
+    print(f"CONCLUSIÓN: {mensaje}")
+
+
+# ---------------------------------------------------------
+# Creación de la Interfaz (Widgets)
+# ---------------------------------------------------------
+
+# --- Pestaña 1: Bacterias ---
+def ui_bacterias():
+    w_r = widgets.FloatSlider(value=3.0, min=1.0, max=5.0, step=0.1, description='Tasa (r)')
+    w_K = widgets.IntSlider(value=10000, min=5000, max=20000, step=100, description='Capacidad (K)')
+    w_n0 = widgets.IntSlider(value=100, min=10, max=500, step=10, description='Inicial (N0)')
+    w_time = widgets.IntSlider(value=10, min=5, max=24, step=1, description='Eje Tiempo')
+    w_t_act = widgets.FloatSlider(value=0, min=0, max=24, step=0.1, description='Simular T')
+
+    # Vincular límite de t_actual con w_time
+    def update_t_range(*args):
+        w_t_act.max = w_time.value
+    w_time.observe(update_t_range, 'value')
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>1. Bacterias (E. coli)</h3><p><i>Crecimiento rápido en espacio limitado</i></p>"),
+        widgets.HBox([w_r, w_K, w_n0]),
+        widgets.HBox([w_time, w_t_act]),
+        widgets.interactive_output(plot_bacterias,
+                                   {'r': w_r, 'K': w_K, 'n0': w_n0, 'max_time': w_time, 't_actual': w_t_act})
+    ])
+    return ui
+
+# --- Pestaña 2: Ballenas ---
+def ui_ballenas():
+    w_r = widgets.FloatSlider(value=0.03, min=0.01, max=0.1, step=0.005, description='Tasa (r)')
+    w_K = widgets.IntSlider(value=5000, min=1000, max=10000, step=100, description='Capacidad (K)')
+    w_n0 = widgets.IntSlider(value=500, min=100, max=2000, step=50, description='Inicial (N0)')
+    w_time = widgets.IntSlider(value=200, min=50, max=500, step=10, description='Horizonte')
+    w_t_act = widgets.FloatSlider(value=0, min=0, max=500, step=1, description='Año Actual')
+
+    def update_t_range(*args):
+        w_t_act.max = w_time.value
+    w_time.observe(update_t_range, 'value')
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>2. Ballenas (Estrategia K)</h3><p><i>Recuperación lenta y estabilidad a largo plazo</i></p>"),
+        widgets.HBox([w_r, w_K, w_n0]),
+        widgets.HBox([w_time, w_t_act]),
+        widgets.interactive_output(plot_ballenas,
+                                   {'r': w_r, 'K': w_K, 'n0': w_n0, 'max_time': w_time, 't_actual': w_t_act})
+    ])
+    return ui
+
+# --- Pestaña 3: Humanos ---
+def ui_humanos():
+    w_r = widgets.FloatSlider(value=0.01, min=0.005, max=0.03, step=0.001, description='Tasa (r)')
+    w_K = widgets.IntSlider(value=10, min=8, max=40, step=1, description='K (Mil M)')
+    w_n0 = widgets.FloatSlider(value=8.0, min=6.0, max=10.0, step=0.1, description='N0 (Actual)')
+    w_time = widgets.IntSlider(value=100, min=50, max=200, step=10, description='Futuro (Años)')
+    w_t_act = widgets.FloatSlider(value=0, min=0, max=200, step=1, description='Avanzar T')
+
+    def update_t_range(*args):
+        w_t_act.max = w_time.value
+    w_time.observe(update_t_range, 'value')
+
+    ui = widgets.VBox([
+        widgets.HTML("<h3>3. Humanos (El debate de K)</h3><p><i>¿Cuál es nuestro límite? Escenarios pesimistas vs optimistas</i></p>"),
+        widgets.HBox([w_r, w_K, w_n0]),
+        widgets.HBox([w_time, w_t_act]),
+        widgets.interactive_output(plot_humanos,
+                                   {'r': w_r, 'K': w_K, 'n0': w_n0, 'max_time': w_time, 't_actual': w_t_act})
+    ])
+    return ui
+
+# ---------------------------------------------------------
+# Ejecución Principal (TabView)
+# ---------------------------------------------------------
+tab = widgets.Tab(children=[ui_bacterias(), ui_ballenas(), ui_humanos()])
+tab.set_title(0, 'Bacterias')
+tab.set_title(1, 'Ballenas')
+tab.set_title(2, 'Humanos')
+
+display(tab)
